@@ -31,7 +31,7 @@ class SyncAdapter implements SyncAdapterInterface
 
     /**
      * Constructor.
-     * 
+     *
      * @param EntityManager         $entityManager
      * @param UrlGeneratorInterface $urlGenerator
      */
@@ -58,13 +58,13 @@ class SyncAdapter implements SyncAdapterInterface
      */
     public function synchronizePackages(Remote $remote)
     {
-        $existingPackages = $this->entityManager->getRepository('Terramar\Packages\Entity\Package')->findBy(array('remote' => $remote));
+        $existingPackages = $this->entityManager->getRepository('Terramar\Packages\Entity\Package')->findBy(['remote' => $remote]);
 
         $projects = $this->getAllProjects($remote);
 
-        $packages = array();
+        $packages = [];
         foreach ($projects as $project) {
-            if (!$this->packageExists($existingPackages, $project['id'])) {
+            if ( ! $this->packageExists($existingPackages, $project['id'])) {
                 $package = new Package();
                 $package->setExternalId($project['id']);
                 $package->setName($project['name']);
@@ -91,7 +91,7 @@ class SyncAdapter implements SyncAdapterInterface
 
     /**
      * Enable a GitLab webhook for the given Package.
-     * 
+     *
      * @param Package $package
      *
      * @return bool
@@ -106,14 +106,16 @@ class SyncAdapter implements SyncAdapterInterface
             $client = $this->getClient($package->getRemote());
             $project = Project::fromArray($client, (array)$client->api('projects')->show($package->getExternalId()));
             $hook = $project->addHook(
-                $this->urlGenerator->generate('webhook_receive', array('id' => $package->getId()), true),
-                array('push_events' => true, 'tag_push_events' => true)
+                $this->urlGenerator->generate('webhook_receive', ['id' => $package->getId()], true),
+                [
+                    'push_events'     => true,
+                    'tag_push_events' => true,
+                ]
             );
             $package->setHookExternalId($hook->id);
             $config->setEnabled(true);
 
             return true;
-
         } catch (\Exception $e) {
             // TODO: Log the exception
             return false;
@@ -122,7 +124,7 @@ class SyncAdapter implements SyncAdapterInterface
 
     /**
      * Disable a GitLab webhook for the given Package.
-     * 
+     *
      * @param Package $package
      *
      * @return bool
@@ -130,14 +132,14 @@ class SyncAdapter implements SyncAdapterInterface
     public function disableHook(Package $package)
     {
         $config = $this->getConfig($package);
-        if (!$config->isEnabled()) {
+        if ( ! $config->isEnabled()) {
             return true;
         }
 
         try {
             if ($package->getHookExternalId()) {
                 $client = $this->getClient($package->getRemote());
-                $project = Project::fromArray($client, (array) $client->api('projects')->show($package->getExternalId()));
+                $project = Project::fromArray($client, (array)$client->api('projects')->show($package->getExternalId()));
                 $project->removeHook($package->getHookExternalId());
             }
 
@@ -145,18 +147,18 @@ class SyncAdapter implements SyncAdapterInterface
             $config->setEnabled(false);
 
             return true;
-
         } catch (\Exception $e) {
             // TODO: Log the exception
             $package->setHookExternalId('');
             $config->setEnabled(false);
+
             return false;
         }
     }
 
     private function getConfig(Package $package)
     {
-        return $this->entityManager->getRepository('Terramar\Packages\Plugin\GitLab\PackageConfiguration')->findOneBy(array('package' => $package));
+        return $this->entityManager->getRepository('Terramar\Packages\Plugin\GitLab\PackageConfiguration')->findOneBy(['package' => $package]);
     }
 
     /**
@@ -166,7 +168,7 @@ class SyncAdapter implements SyncAdapterInterface
      */
     private function getRemoteConfig(Remote $remote)
     {
-        return $this->entityManager->getRepository('Terramar\Packages\Plugin\GitLab\RemoteConfiguration')->findOneBy(array('remote' => $remote));
+        return $this->entityManager->getRepository('Terramar\Packages\Plugin\GitLab\RemoteConfiguration')->findOneBy(['remote' => $remote]);
     }
 
     private function getAllProjects(Remote $remote)
@@ -174,11 +176,10 @@ class SyncAdapter implements SyncAdapterInterface
         $client = $this->getClient($remote);
 
         $isAdmin = $client->api('users')->me()['is_admin'];
-        $projects = array();
+        $projects = [];
         $page = 1;
         while (true) {
-
-            /**
+            /*
              * there is a difference when accessing /projects (accessible) and /projects/all (all)
              * http://doc.gitlab.com/ce/api/projects.html
              */
@@ -204,7 +205,7 @@ class SyncAdapter implements SyncAdapterInterface
     {
         $config = $this->getRemoteConfig($remote);
 
-        $client = new Client(rtrim($config->getUrl(), '/').'/api/v3/');
+        $client = new Client(rtrim($config->getUrl(), '/') . '/api/v3/');
         $client->authenticate($config->getToken(), Client::AUTH_HTTP_TOKEN);
 
         return $client;
@@ -212,8 +213,10 @@ class SyncAdapter implements SyncAdapterInterface
 
     private function packageExists($existingPackages, $gitlabId)
     {
-        return count(array_filter($existingPackages, function (Package $package) use ($gitlabId) {
-                    return (string) $package->getExternalId() === (string) $gitlabId;
-                })) > 0;
+        return count(
+                array_filter($existingPackages, function (Package $package) use ($gitlabId) {
+                    return (string)$package->getExternalId() === (string)$gitlabId;
+                })
+            ) > 0;
     }
 }
