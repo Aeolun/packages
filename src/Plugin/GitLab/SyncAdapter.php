@@ -11,6 +11,7 @@ namespace Terramar\Packages\Plugin\GitLab;
 
 use Doctrine\ORM\EntityManager;
 use Gitlab\Client;
+use Gitlab\HttpClient\Builder;
 use Gitlab\Model\Project;
 use Nice\Router\UrlGeneratorInterface;
 use Terramar\Packages\Entity\Package;
@@ -32,7 +33,7 @@ class SyncAdapter implements SyncAdapterInterface
     /**
      * Constructor.
      *
-     * @param EntityManager $entityManager
+     * @param EntityManager         $entityManager
      * @param UrlGeneratorInterface $urlGenerator
      */
     public function __construct(EntityManager $entityManager, UrlGeneratorInterface $urlGenerator)
@@ -99,24 +100,32 @@ class SyncAdapter implements SyncAdapterInterface
     {
         $client = $this->getClient($remote);
 
-        $isAdmin = $client->api('users')->me()['is_admin'];
+        $user = $client->api('users')->me();
+        $isAdmin = isset($user['is_admin']) ? $user['is_admin'] : false;
         $projects = [];
         $page = 1;
         while (true) {
-
-            /**
+            /*
              * there is a difference when accessing /projects (accessible) and /projects/all (all)
              * http://doc.gitlab.com/ce/api/projects.html
              */
             if ($isAdmin) {
-                $visibleProjects = $client->api('projects')->all($page, 100);
+                $visibleProjects = $client->api('projects')->all([
+                    'page'     => $page,
+                    'per_page' => 100,
+                ]);
             } else {
-                $visibleProjects = $client->api('projects')->accessible($page, 100);
+                $visibleProjects = $client->api('projects')->all([
+                    'page'       => $page,
+                    'per_page'   => 100,
+                    'membership' => true,
+                ]);
             }
 
             $projects = array_merge($projects, $visibleProjects);
-            $linkHeader = $client->getHttpClient()->getLastResponse()->getHeader('Link');
-            if (strpos($linkHeader, 'rel="next"') === false) {
+            $linkHeader = $client->getResponseHistory()->getLastResponse()->getHeader('Link');
+
+            if (strpos($linkHeader[0], 'rel="next"') === false) {
                 break;
             }
 
@@ -130,7 +139,8 @@ class SyncAdapter implements SyncAdapterInterface
     {
         $config = $this->getRemoteConfig($remote);
 
-        $client = new Client(rtrim($config->getUrl(), '/') . '/api/v3/');
+        $client = new Client(new Builder());
+        $client->setUrl(rtrim($config->getUrl(), '/') . '/api/v4/');
         $client->authenticate($config->getToken(), Client::AUTH_HTTP_TOKEN);
 
         return $client;
@@ -149,6 +159,7 @@ class SyncAdapter implements SyncAdapterInterface
     /**
      * @param $existingPackages
      * @param $gitlabId
+     *
      * @return Package|null
      */
     private function getExistingPackage($existingPackages, $gitlabId)
@@ -159,6 +170,7 @@ class SyncAdapter implements SyncAdapterInterface
         if (count($res) === 0) {
             return null;
         }
+
         return array_shift($res);
     }
 
@@ -180,13 +192,14 @@ class SyncAdapter implements SyncAdapterInterface
             $project = Project::fromArray($client, (array)$client->api('projects')->show($package->getExternalId()));
             $hook = $project->addHook(
                 $this->urlGenerator->generate('webhook_receive', ['id' => $package->getId()], true),
-                ['push_events' => true, 'tag_push_events' => true]
+                ['push_events'     => true,
+                 'tag_push_events' => true,
+                ]
             );
             $package->setHookExternalId($hook->id);
             $config->setEnabled(true);
 
             return true;
-
         } catch (\Exception $e) {
             // TODO: Log the exception
             return false;
@@ -208,7 +221,7 @@ class SyncAdapter implements SyncAdapterInterface
     public function disableHook(Package $package)
     {
         $config = $this->getConfig($package);
-        if (!$config->isEnabled()) {
+        if ( ! $config->isEnabled()) {
             return true;
         }
 
@@ -224,7 +237,6 @@ class SyncAdapter implements SyncAdapterInterface
             $config->setEnabled(false);
 
             return true;
-
         } catch (\Exception $e) {
             // TODO: Log the exception
             $package->setHookExternalId('');
