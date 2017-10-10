@@ -31,7 +31,7 @@
     <div class="row">
         <div class="col-md-9">
             <div class="bg-info" style="padding:10px;">
-                <div class="pull-right">{{ package.release_date|date('Y-m-d H:i:s') }}</div>
+                <div class="pull-right">{{ package.releaseDate|date('Y-m-d H:i:s') }}</div>
                 {{ package.prettyVersion }}
             </div>
             <div class="row">
@@ -39,7 +39,7 @@
                     <h3>Requires</h3>
                     {% if package.requires|length > 0 %}
                         <!-- Need to find some way to make this detect whether to try to open this on packagist or elsewhere -->
-                        <ul>{% for item in package.requires %}<li><a href="https://packagist.org/packages/{{ item.target }}">{{ item.target }}</a>: {{ item.prettyConstraint }}</li>{% endfor %}</ul>
+                        <ul class="sub-packages">{% for item in package.requires %}<li><a href="https://packagist.org/packages/{{ item.target }}">{{ item.target }}</a>: {{ item.prettyConstraint }}</li>{% endfor %}</ul>
                     {% else %}
                         <div class="text-muted">None</div>
                     {% endif %}
@@ -47,7 +47,7 @@
                 <div class="col-md-4">
                     <h3>Requires (dev)</h3>
                     {% if package.devRequires|length > 0 %}
-                        <ul>{% for item in package.devRequires %}<li><a href="https://packagist.org/packages/{{ item.target }}">{{ item.target }}</a>: {{ item.prettyConstraint }}</li>{% endfor %}</ul>
+                        <ul class="sub-packages">{% for item in package.devRequires %}<li><a href="https://packagist.org/packages/{{ item.target }}">{{ item.target }}</a>: {{ item.prettyConstraint }}</li>{% endfor %}</ul>
                     {% else %}
                         <div class="text-muted">None</div>
                     {% endif %}
@@ -55,7 +55,7 @@
                 <div class="col-md-4">
                     <h3>Suggests</h3>
                     {% if package.suggests|length > 0 %}
-                        <ul>{% for item in package.suggests %}<li><a href="https://packagist.org/packages/{{ item.target }}">{{ item.target }}</a>: {{ item.prettyConstraint }}</li>{% endfor %}</ul>
+                        <ul class="sub-packages">{% for item in package.suggests %}<li><a href="https://packagist.org/packages/{{ item.target }}">{{ item.target }}</a>: {{ item.prettyConstraint }}</li>{% endfor %}</ul>
                     {% else %}
                         <div class="text-muted">None</div>
                     {% endif %}
@@ -65,7 +65,7 @@
                 <div class="col-md-4">
                     <h3>Provides</h3>
                     {% if package.provides|length > 0 %}
-                        <ul>{% for item in package.provides %}<li><a href="https://packagist.org/packages/{{ item.target }}">{{ item.target }}</a>: {{ item.prettyConstraint }}</li>{% endfor %}</ul>
+                        <ul class="sub-packages">{% for item in package.provides %}<li><a href="https://packagist.org/packages/{{ item.target }}">{{ item.target }}</a>: {{ item.prettyConstraint }}</li>{% endfor %}</ul>
                     {% else %}
                         <div class="text-muted">None</div>
                     {% endif %}
@@ -73,7 +73,7 @@
                 <div class="col-md-4">
                     <h3>Conflicts</h3>
                     {% if package.conflicts|length > 0 %}
-                        <ul>{% for item in package.conflicts %}<li><a href="https://packagist.org/packages/{{ item.target }}">{{ item.target }}</a>: {{ item.prettyConstraint }}</li>{% endfor %}</ul>
+                        <ul class="sub-packages">{% for item in package.conflicts %}<li><a href="https://packagist.org/packages/{{ item.target }}">{{ item.target }}</a>: {{ item.prettyConstraint }}</li>{% endfor %}</ul>
                     {% else %}
                         <div class="text-muted">None</div>
                     {% endif %}
@@ -81,7 +81,7 @@
                 <div class="col-md-4">
                     <h3>Replaces</h3>
                     {% if package.replaces|length > 0 %}
-                        <ul>{% for item in package.replaces %}<li><a href="https://packagist.org/packages/{{ item.target }}">{{ item.target }}</a>: {{ item.prettyConstraint }}</li>{% endfor %}</ul>
+                        <ul class="sub-packages">{% for item in package.replaces %}<li><a href="https://packagist.org/packages/{{ item.target }}">{{ item.target }}</a>: {{ item.prettyConstraint }}</li>{% endfor %}</ul>
                     {% else %}
                         <div class="text-muted">None</div>
                     {% endif %}

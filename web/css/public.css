@@ -29,11 +29,9 @@ h1 {
 }
 
 .wrapper {
-  margin-top: 40px;
   background-color: white;
   border: 1px solid #CCCCCC;
   height: 100%;
-  padding: 30px;
   border-radius: 4px;
 }
 
@@ -87,7 +85,7 @@ h1 {
   }
 }
 
-ul {
+ul.sub-packages {
   padding-left:20px;
 }
 
