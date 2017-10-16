@@ -12,6 +12,7 @@ namespace Terramar\Packages\Plugin\Sami;
 use Nice\Application;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Terramar\Packages\Entity\Package;
 
 class Controller
 {
@@ -32,9 +33,14 @@ class Controller
     {
         /** @var \Doctrine\ORM\EntityManager $entityManager */
         $entityManager = $app->get('doctrine.orm.entity_manager');
+
         $config = $entityManager->getRepository('Terramar\Packages\Plugin\Sami\PackageConfiguration')->findOneBy([
             'package' => $id,
         ]);
+        if ( ! $config) {
+            $config = new PackageConfiguration();
+            $config->setPackage($entityManager->getReference(Package::class, $id));
+        }
 
         $config->setEnabled($request->get('sami_enabled') ? true : false);
         $config->setTitle($request->get('sami_title'));
