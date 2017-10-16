@@ -30,6 +30,7 @@ class PackagesConfiguration implements ConfigurationInterface
             ->scalarNode('name')->defaultNull()->end()
             ->scalarNode('homepage')->defaultValue('')->end()
             ->scalarNode('base_path')->defaultValue('')->end()
+            ->scalarNode('hook_base')->defaultValue('')->end()
             ->booleanNode('archive')->defaultFalse()->end()
             ->scalarNode('contact_email')->defaultValue('')->end()
             ->scalarNode('output_dir')->defaultValue('%app.root_dir%/web')->end()

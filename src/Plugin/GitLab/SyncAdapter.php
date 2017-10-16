@@ -30,16 +30,19 @@ class SyncAdapter implements SyncAdapterInterface
      */
     private $urlGenerator;
 
+    private $packagesConfiguration;
+
     /**
      * Constructor.
      *
      * @param EntityManager         $entityManager
      * @param UrlGeneratorInterface $urlGenerator
      */
-    public function __construct(EntityManager $entityManager, UrlGeneratorInterface $urlGenerator)
+    public function __construct(EntityManager $entityManager, UrlGeneratorInterface $urlGenerator, $packagesConfiguration)
     {
         $this->entityManager = $entityManager;
         $this->urlGenerator = $urlGenerator;
+        $this->packagesConfiguration = $packagesConfiguration;
     }
 
     /**
@@ -188,10 +191,16 @@ class SyncAdapter implements SyncAdapterInterface
             return true;
         }
         try {
+            if ( ! empty($this->packagesConfiguration['hook_base'])) {
+                $hookUrl = $this->packagesConfiguration['hook_base'] . $this->urlGenerator->generate('webhook_receive', ['id' => $package->getId()]);
+            } else {
+                $hookUrl = $this->urlGenerator->generate('webhook_receive', ['id' => $package->getId()], true);
+            }
+
             $client = $this->getClient($package->getRemote());
             $project = Project::fromArray($client, (array)$client->api('projects')->show($package->getExternalId()));
             $hook = $project->addHook(
-                $this->urlGenerator->generate('webhook_receive', ['id' => $package->getId()], true),
+                $hookUrl,
                 ['push_events'     => true,
                  'tag_push_events' => true,
                 ]

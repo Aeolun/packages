@@ -28,7 +28,8 @@ class Plugin implements PluginInterface
     {
         $container->register('packages.plugin.gitlab.adapter', 'Terramar\Packages\Plugin\GitLab\SyncAdapter')
             ->addArgument(new Reference('doctrine.orm.entity_manager'))
-            ->addArgument(new Reference('router.url_generator'));
+            ->addArgument(new Reference('router.url_generator'))
+            ->addArgument('%packages.configuration%');
 
         $container->getDefinition('packages.helper.sync')
             ->addMethodCall('registerAdapter', [new Reference('packages.plugin.gitlab.adapter')]);
@@ -66,10 +67,8 @@ class Plugin implements PluginInterface
         return 'GitLab';
     }
 
-    /**
-     */
     public function getVersion()
     {
-        return;
+        return null;
     }
 }

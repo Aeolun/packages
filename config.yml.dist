@@ -33,6 +33,10 @@ packages:
   # Needs to be set to generate a dist archive
   base_path:   'https://localhost'
 
+  # Can be set if you want hooks (gitlab or github) sent to a different url than the default Satis host
+  # for example if you are behind a corporate firewall and have to proxy the requests.
+  hook_base: ''
+
   # If set, will place a copy of every tagged package version in the web/dist folder
   archive:    true
 
